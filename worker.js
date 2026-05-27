@@ -1,73 +1,71 @@
-addEventListener('fetch', function(event) {
-  event.respondWith(handleRequest(event.request, event.env));
-});
-
-async function handleRequest(request, env) {
-  var cors = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { headers: cors });
-  }
-  var url = new URL(request.url);
-  if (url.pathname !== '/api/farm/latest') {
-    return jr({ success: false, error: 'Not Found' }, 404);
-  }
-  try {
-    var roleId = env.FARM_ROLE_ID;
-    var deviceModel = env.FARM_DEVICE_MODEL;
-    var uuid = env.FARM_UUID;
-    var token = env.FARM_TOKEN || 'aU0ZcOzmpNoa56fDez';
-    if (!roleId || !deviceModel || !uuid) {
-      return jr({ success: false, error: '配置不完整' }, 500);
+export default {
+  async fetch(request, env, ctx) {
+    var cors = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    };
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: cors });
     }
-    var auth = ga(roleId, token);
-    var body = JSON.stringify({
-      server: '15001', code: 'u5', sign: auth.sign,
-      language: 'zh-CN', deviceName: 'duchamp', systemVersion: 36,
-      uuid: uuid, mode: 'view', systemName: 'android',
-      batteryState: 3, extra: '', appId: '4608997350',
-      batteryLevel: 90, gameId: 'u5', roleId: roleId,
-      deeplink: '[]', env: 'production', nonce: auth.nonce,
-      size: 'medium', domain: 'https://u5-vision.nie.netease.com',
-      designId: 4608997351, sdkVersion: 3, deviceModel: deviceModel,
-      ts: auth.ts, nightMode: false
-    });
-    var resp = await fetch('https://u5-vision.nie.netease.com/widget/view', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body
-    });
-    var json = await resp.json();
-    if (json.success !== 'true') {
-      return jr({ success: false, error: json.desc || '失败' }, 500);
+    var url = new URL(request.url);
+    if (url.pathname !== '/api/farm/latest') {
+      return jr({ success: false, error: 'Not Found' }, 404);
     }
-    var el = json.data && json.data.view && json.data.view.elements ? json.data.view.elements : {};
-    var wi = [];
-    if (el['image_R3Xw:R5xp'] && el['image_R3Xw:R5xp'].src) wi.push(el['image_R3Xw:R5xp'].src);
-    if (el['image_JeHp:Vmcb'] && el['image_JeHp:Vmcb'].src) wi.push(el['image_JeHp:Vmcb'].src);
-    return jr({
-      success: true,
-      data: {
-        weatherIcons: wi,
-        seedImage: gs(el, 'image_Lb2J:5Fo7'),
-        seedName: gt(el, 'text_TLl5:dwdi'),
-        seedQualityBg: gs(el, 'image_z9Sa:fdFU'),
-        toolImage: gs(el, 'image_cruF:gFs5'),
-        toolName: gt(el, 'text_vtOZ:50mh'),
-        toolQualityBg: gs(el, 'image_6grb:EYVa'),
-        fetchTime: Date.now()
-      },
-      maskedRoleId: roleId.substring(0, 3) + '***',
-      maskedDeviceModel: '***',
-      maskedUuid: uuid.substring(0, 4) + '***'
-    });
-  } catch (e) {
-    return jr({ success: false, error: e.message }, 500);
+    try {
+      var roleId = env.FARM_ROLE_ID;
+      var deviceModel = env.FARM_DEVICE_MODEL;
+      var uuid = env.FARM_UUID;
+      var token = env.FARM_TOKEN || 'aU0ZcOzmpNoa56fDez';
+      if (!roleId || !deviceModel || !uuid) {
+        return jr({ success: false, error: '配置不完整' }, 500);
+      }
+      var auth = ga(roleId, token);
+      var body = JSON.stringify({
+        server: '15001', code: 'u5', sign: auth.sign,
+        language: 'zh-CN', deviceName: 'duchamp', systemVersion: 36,
+        uuid: uuid, mode: 'view', systemName: 'android',
+        batteryState: 3, extra: '', appId: '4608997350',
+        batteryLevel: 90, gameId: 'u5', roleId: roleId,
+        deeplink: '[]', env: 'production', nonce: auth.nonce,
+        size: 'medium', domain: 'https://u5-vision.nie.netease.com',
+        designId: 4608997351, sdkVersion: 3, deviceModel: deviceModel,
+        ts: auth.ts, nightMode: false
+      });
+      var resp = await fetch('https://u5-vision.nie.netease.com/widget/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body
+      });
+      var json = await resp.json();
+      if (json.success !== 'true') {
+        return jr({ success: false, error: json.desc || '失败' }, 500);
+      }
+      var el = json.data && json.data.view && json.data.view.elements ? json.data.view.elements : {};
+      var wi = [];
+      if (el['image_R3Xw:R5xp'] && el['image_R3Xw:R5xp'].src) wi.push(el['image_R3Xw:R5xp'].src);
+      if (el['image_JeHp:Vmcb'] && el['image_JeHp:Vmcb'].src) wi.push(el['image_JeHp:Vmcb'].src);
+      return jr({
+        success: true,
+        data: {
+          weatherIcons: wi,
+          seedImage: gs(el, 'image_Lb2J:5Fo7'),
+          seedName: gt(el, 'text_TLl5:dwdi'),
+          seedQualityBg: gs(el, 'image_z9Sa:fdFU'),
+          toolImage: gs(el, 'image_cruF:gFs5'),
+          toolName: gt(el, 'text_vtOZ:50mh'),
+          toolQualityBg: gs(el, 'image_6grb:EYVa'),
+          fetchTime: Date.now()
+        },
+        maskedRoleId: roleId.substring(0, 3) + '***',
+        maskedDeviceModel: '***',
+        maskedUuid: uuid.substring(0, 4) + '***'
+      });
+    } catch (e) {
+      return jr({ success: false, error: e.message }, 500);
+    }
   }
-}
+};
 
 function gs(o, k) { return o[k] && o[k].src ? o[k].src : ''; }
 function gt(o, k) { return o[k] && o[k].content ? o[k].content : ''; }
